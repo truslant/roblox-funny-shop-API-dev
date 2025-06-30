@@ -1,6 +1,16 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
+const sequelize = require('./db/database');
+
+sequelize.authenticate()
+    .then(() => {
+        console.log('DB connection established')
+    })
+    .catch(err => {
+        console.log('DB connection error: ', err);
+    })
+
 const helmet = require('helmet');
 
 const express = require('express');
