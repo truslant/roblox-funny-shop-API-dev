@@ -22,8 +22,10 @@ const getUserModel = (sequelize, { DataTypes }) => {
         email: {
             type: DataTypes.TEXT,
             allowNull: false,
+            unique: true,
             validate: {
-                notEmpty: true
+                notEmpty: true,
+                isEmail: true,
             }
         }
     },
@@ -34,6 +36,5 @@ const getUserModel = (sequelize, { DataTypes }) => {
     )
     return User;
 }
-
 
 module.exports = getUserModel;

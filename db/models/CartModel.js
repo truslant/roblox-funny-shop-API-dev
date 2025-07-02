@@ -4,11 +4,12 @@ const getCartModel = (sequelize, { DataTypes }) => {
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
-                allowNull: false
+                autoIncrement: true,
             },
             userid: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
+                unique: true,
                 validate: {
                     notEmpty: true
                 }
@@ -19,7 +20,6 @@ const getCartModel = (sequelize, { DataTypes }) => {
             timestamps: false
         }
     );
-
     return Cart
 }
 
