@@ -1,5 +1,5 @@
 const getCartsProducts = (sequelize, { DataTypes }) => {
-    const CartsProducts = sequelize.define('carts_products',
+    const CartsProducts = sequelize.define('CartsProducts',
         {
             id: {
                 type: DataTypes.INTEGER,

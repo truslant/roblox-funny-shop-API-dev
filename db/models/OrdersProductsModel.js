@@ -1,5 +1,5 @@
 const getOrdersProducts = (sequelize, { DataTypes }) => {
-    const OrdersProducts = sequelize.define('orders_products',
+    const OrdersProducts = sequelize.define('OrdersProducts',
         {
             id: {
                 type: DataTypes.INTEGER,
@@ -14,7 +14,7 @@ const getOrdersProducts = (sequelize, { DataTypes }) => {
                 }
             },
             productid: {
-                types: DataTypes.INTEGER,
+                type: DataTypes.INTEGER,
                 allowNull: false,
                 validate: {
                     notEmpty: true,

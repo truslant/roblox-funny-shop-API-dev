@@ -1,5 +1,5 @@
 const getOrderModel = (sequelize, { DataTypes }) => {
-    const Order = sequelize.define('order', {
+    const Order = sequelize.define('Order', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
