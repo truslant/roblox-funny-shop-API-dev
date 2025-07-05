@@ -5,23 +5,71 @@ const { models, sequelize } = require('../../db/database');
 
 
 router.get('/', async (req, res, next) => {
-    const user = await models.User.findOne({
-        where: {
-            userid: 1
+
+    const users = await models.User.findAll(
+        {
+            // where: {
+            //     id: 1
+            // }
         }
-    });
+    );
 
-    console.log('User.findAll output: ', user);
+    // console.log('User.findAll output: ', users);
 
-    const orders = user.getOrders();
+    const orders = await users[0].getOrders(
+        {
+            include: [{
+                model: models.User
+            }, {
+                model: models.Product
+            },
+            ]
+        }
+    );
+    const result = {};
 
-    console.log('user.getOrders: ', orders);
+    console.log(`======= Orders ======`)
+    orders.forEach(order => {
+        const orderid = order.id;
 
-    const fullOrders = user.getOrders({ include: ['products'] });
+        const { firstname, lastname, email } = order.User;
+        console.log(`Order #: `, orderid);
+        console.log(`--------------------`)
+        console.log(`User name: `, firstname);
+        console.log(`User last name: `, lastname);
+        console.log(`User email: `, email);
+        console.log(`----Order Items----`);
 
-    console.log(`user.getOrders({ include: ['products'] }): `, fullOrders);
+        result[orderid] = {};
+        result[orderid].Products = [];
 
-    res.json(user[0]);
+        result[orderid].User = {
+            firstname,
+            lastname,
+            email
+        }
+
+        order.Products.forEach(product => {
+            const { name, description, price } = product;
+            const { qty } = product.OrdersProducts;
+            console.log(`Item name: `, name);
+            console.log(`Item description: `, description);
+            console.log(`Item price: `, price);
+            console.log(`Item Qty: `, qty);
+            console.log(`total: `, price * qty);
+            console.log(`-`);
+
+            result[orderid].Products.push({
+                name,
+                description,
+                price,
+                qty,
+                total: price * qty
+            })
+        })
+    })
+
+    res.json(orders);
 })
 
 module.exports = router;

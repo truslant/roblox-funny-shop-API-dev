@@ -3,7 +3,10 @@ const associationsConfig = [
         sourceModelName: 'User',
         targetModelName: 'Cart',
         association: 'hasOne',
-        options: { onDelete: 'CASCADE' }
+        options: {
+            foreignKey: 'userid',
+            onDelete: 'CASCADE',
+        }
     },
     {
         sourceModelName: 'Cart',
@@ -18,7 +21,10 @@ const associationsConfig = [
         sourceModelName: 'User',
         targetModelName: 'Order',
         association: 'hasMany',
-        options: { onDelete: 'CASCADE' }
+        options: {
+            foreignKey: 'userid',
+            onDelete: 'CASCADE'
+        }
     },
     {
         sourceModelName: 'Order',
