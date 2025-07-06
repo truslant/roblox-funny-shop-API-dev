@@ -1,9 +1,62 @@
 const express = require('express');
 const router = express.Router();
-const passport = require('../../db/auth/passport')
+const passport = require('../../db/auth/passport');
 
-const { models, sequelize } = require('../../db/database');
+const { User } = require('../../db/database').models
 
+const bcrypt = require('bcrypt');
+
+router.post('/register', async (req, res, next) => {
+    const { firstname, lastname, email, password, passwordCheck } = req.body;
+    if (password != passwordCheck) res.redirect('/register');
+    try {
+        const hashedPassword = await bcrypt.hash(password, 12)
+        await User.create({
+            firstname,
+            lastname,
+            email,
+            password: hashedPassword,
+        });
+        res.redirect('/')
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put('/update', async (req, res, next) => {
+
+    if (!req.isAuthenticated()) {
+        res.redirect('/');
+    }
+
+    const { firstname, lastname, email, password, newPassword, newPasswordCheck } = req.body;
+
+    try {
+        const user = await User.findByPk(req.user.id);
+
+        const match = await bcrypt.compare(password, user.password);
+
+        if (match && newPassword == newPasswordCheck) {
+
+            const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+            const userData = { firstname, lastname, email, password: hashedPassword };
+
+            Object.keys(userData).forEach(key => {
+                if (user[key] !== userData[key]) {
+                    user[key] = userData[key]
+                }
+            })
+
+            await user.save();
+            res.redirect('/')
+        }
+        res.redirect('/');
+    } catch (error) {
+        next(error);
+    }
+
+});
 
 router.post('/login',
     passport.authenticate(
@@ -13,9 +66,22 @@ router.post('/login',
         }
     ),
     (req, res, next) => {
-        res.json(req.user);
+        console.log('Authentication succeded!')
+        res.redirect('/');
     }
 )
+
+router.get('/logout', (req, res, next) => {
+    req.logout(err => {
+        if (err) res.send(err);
+        req.session.destroy();
+        res.redirect('/')
+    });
+});
+
+module.exports = router;
+
+
 
 // router.get('/',
 
@@ -86,5 +152,3 @@ router.post('/login',
 
 // res.json(orders);
 // })
-
-module.exports = router;
