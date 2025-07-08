@@ -18,9 +18,9 @@ const pgSessionPoolConfig = {
 }
 
 const pgSessionPool = new Pool(pgSessionPoolConfig);
-pgSessionPool.on('connect', () => console.log('New connection established'));
-pgSessionPool.on('acquire', () => console.log('Connection acquired'));
-pgSessionPool.on('release', () => console.log('Connection released'));
+// pgSessionPool.on('connect', () => console.log('New connection established'));
+// pgSessionPool.on('acquire', () => console.log('Connection acquired'));
+// pgSessionPool.on('release', () => console.log('Connection released'));
 
 
 const pgSessionStoreConfig = {

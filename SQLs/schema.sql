@@ -45,6 +45,6 @@ CREATE TABLE
         id SERIAL PRIMARY KEY,
         orderid integer REFERENCES orders (id) ON DELETE CASCADE,
         productid integer REFERENCES products (id) ON DELETE CASCADE,
-        qty integer,
+        qty integer NOT NULL,
         UNIQUE (orderid, productid)
     );

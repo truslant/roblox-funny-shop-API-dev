@@ -18,6 +18,28 @@ const associationsConfig = [
         }
     },
     {
+        sourceModelName: 'Cart',
+        targetModelName: 'Product',
+        association: 'belongsToMany',
+        options: {
+            through: 'CartsProducts',
+            foreignKey: 'cartid',
+            otherKey: 'productid',
+            onDelete: 'CASCADE'
+        }
+    },
+    {
+        sourceModelName: 'Product',
+        targetModelName: 'Cart',
+        association: 'belongsToMany',
+        options: {
+            through: 'CartsProducts',
+            foreignKey: 'productid',
+            otherKey: 'cartid',
+            onDelete: 'CASCADE'
+        }
+    },
+    {
         sourceModelName: 'User',
         targetModelName: 'Order',
         association: 'hasMany',
@@ -35,17 +57,7 @@ const associationsConfig = [
             onDelete: 'CASCADE'
         }
     },
-    {
-        sourceModelName: 'Product',
-        targetModelName: 'Cart',
-        association: 'belongsToMany',
-        options: {
-            through: 'CartsProducts',
-            foreignKey: 'productid',
-            otherKey: 'cartid',
-            onDelete: 'CASCADE'
-        }
-    },
+
     {
         sourceModelName: 'Order',
         targetModelName: 'Product',
@@ -68,17 +80,7 @@ const associationsConfig = [
             onDelete: 'CASCADE'
         }
     },
-    {
-        sourceModelName: 'Cart',
-        targetModelName: 'Product',
-        association: 'belongsToMany',
-        options: {
-            through: 'CartsProducts',
-            foreignKey: 'cartid',
-            otherKey: 'productid',
-            onDelete: 'CASCADE'
-        }
-    },
+
 ]
 
 module.exports = associationsConfig;

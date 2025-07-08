@@ -1,23 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const bcrypt = require('bcrypt');
-
 const userRouter = require('./users/usersRouter');
+const cartRouter = require('./cart/cartRouter');
 
 router.get('/', async (req, res, next) => {
-    // const passArray = [
-    //     '12345',
-    //     '67890',
-    //     '111213',
-    //     '54321'
-    // ]
-
-    // passArray.forEach(async (pass) => {
-    //     const hashedPass = await bcrypt.hash(pass, 12)
-    //     console.log(`${pass}: `, hashedPass);
-    // })
-
     res.json({
         dir: 'User Root',
         session: req.session,
@@ -26,6 +13,7 @@ router.get('/', async (req, res, next) => {
 });
 
 router.use('/users', userRouter);
+router.use('/cart', cartRouter);
 
 router.use(
     (err, req, res, next) => {
