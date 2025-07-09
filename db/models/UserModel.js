@@ -34,6 +34,15 @@ const getUserModel = (sequelize, { DataTypes }) => {
             validate: {
                 notEmpty: true
             }
+        },
+        status: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+            defaultValue: 'user',
+            validate: {
+                notEmpty: true,
+                isIn: [['user', 'admin']],
+            }
         }
     },
         {

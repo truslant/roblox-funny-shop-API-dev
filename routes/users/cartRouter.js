@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { User, Product, CartsProducts } = require('../../db/database').models
 
-const authCheck = (req, res, next) => {
-    if (!req.isAuthenticated()) res.redirect('/login');
-    next();
-}
+const { authCheck, retreiveUserCart } = require('../utilities/utilities')
 
 const productExistanceCheck = async (Product, productId) => {
     const product = await Product.findByPk(productId);
@@ -13,31 +10,11 @@ const productExistanceCheck = async (Product, productId) => {
     return product;
 }
 
-const retreiveUserCart = async (req, Product) => {
-    const user = await User.findByPk(req.user.id);
-
-    const cart = await user.getCart({
-        include: [
-            {
-                model: Product,
-                through: {
-                    attributes: [
-                        'qty'
-                    ]
-                }
-            }
-        ]
-    });
-
-    if (!cart) await user.createCart();
-
-    return { user, cart }
-}
 
 router.get('/', authCheck, async (req, res, next) => {
     try {
-        const { cart } = await retreiveUserCart(req, Product);
-        res.json(cart);
+        const { cart } = await retreiveUserCart(req);
+        res.status(200).json(cart);
     } catch (error) {
         next(error)
     }
@@ -51,7 +28,7 @@ router.post('/addProduct', authCheck, async (req, res, next) => {
 
         const product = await productExistanceCheck(Product, productId);
 
-        const { cart } = await retreiveUserCart(req, Product);
+        const { cart } = await retreiveUserCart(req);
 
         let curQty = 0;
 
@@ -85,7 +62,7 @@ router.delete('/removeProduct', authCheck, async (req, res, next) => {
     try {
         await productExistanceCheck(Product, productId);
 
-        const { cart } = await retreiveUserCart(req, Product);
+        const { cart } = await retreiveUserCart(req);
 
         for (const product of cart.Products) {
             if (product.id == productId) {
@@ -106,7 +83,7 @@ router.delete('/reduceProduct', authCheck, async (req, res, next) => {
     try {
         const product = await productExistanceCheck(Product, productId);
 
-        const { cart } = await retreiveUserCart(req, Product);
+        const { cart } = await retreiveUserCart(req);
 
         let curQty = 0;
 
@@ -150,4 +127,3 @@ module.exports = router;
 
 
 
-// console.log('User methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(user)));

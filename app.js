@@ -1,6 +1,7 @@
 // const crypto = require('crypto');
 const dotenv = require('dotenv');
 dotenv.config();
+const path = require('path')
 
 const { session, sessionConfig } = require('./db/session/pgSessionConfig')
 
@@ -24,6 +25,7 @@ app.use(helmet());
 app.use(session(sessionConfig));
 app.use(express.urlencoded());
 app.use(express.json());
+app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // const passport = require('passport');
 // const PassportLocalStrategy = require('passport-local').Strategy;

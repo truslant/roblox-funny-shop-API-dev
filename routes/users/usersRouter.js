@@ -3,6 +3,7 @@ const router = express.Router();
 const passport = require('../../db/auth/passport');
 
 const { User } = require('../../db/database').models
+const { authCheck } = require('../utilities/utilities');
 
 const bcrypt = require('bcrypt');
 
@@ -29,11 +30,7 @@ router.post('/register', async (req, res, next) => {
     }
 });
 
-router.put('/update', async (req, res, next) => {
-
-    if (!req.isAuthenticated()) {
-        res.redirect('/');
-    }
+router.put('/update', authCheck, async (req, res, next) => {
 
     const { firstname, lastname, email, password, newPassword, newPasswordCheck } = req.body;
 
@@ -68,7 +65,7 @@ router.post('/login',
     passport.authenticate(
         'local',
         {
-            failureRedirect: '/'
+            failureRedirect: '/users/logout'
         }
     ),
     (req, res, next) => {
@@ -81,8 +78,12 @@ router.get('/logout', (req, res, next) => {
     req.logout(err => {
         if (err) res.send(err);
         req.session.destroy();
-        res.redirect('/')
+        res.redirect('/users/login')
     });
 });
+
+router.get('/login', (req, res, next) => {
+    res.redirect('/static/index.html');
+})
 
 module.exports = router;    
