@@ -1,0 +1,5 @@
+{
+  message: 'Incorrect current password at "/update" for user ID: 4',
+  level: 'info',
+  timestamp: '2025-07-10T15:29:02.008Z'
+}

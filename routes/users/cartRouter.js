@@ -1,12 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { User, Product, CartsProducts } = require('../../db/database').models
+const logger = require('../utilities/logger');
+
+const { Product, CartsProducts } = require('../../db/database').models
 
 const { authCheck, retreiveUserCart } = require('../utilities/utilities')
 
 const productExistanceCheck = async (Product, productId) => {
     const product = await Product.findByPk(productId);
-    if (!product) res.send(`No matching product in DB for this product ID: ${productId}`);
+    if (!product) {
+        logger.info(`No matching product in DB for this product ID: ${productId}`)
+        res.status(404).json({ msg: `No matching product in DB for this product ID: ${productId}` });
+        return
+    }
     return product;
 }
 
@@ -16,7 +22,9 @@ router.get('/', authCheck, async (req, res, next) => {
         const { cart } = await retreiveUserCart(req);
         res.status(200).json(cart);
     } catch (error) {
-        next(error)
+        const errMsg = 'Error occured while retreving cart data. '
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 });
 
@@ -52,7 +60,9 @@ router.post('/addProduct', authCheck, async (req, res, next) => {
         res.redirect('/cart')
 
     } catch (error) {
-        next(error)
+        const errMsg = 'Error occured while adding/increasing qty of the product to/in the cart.'
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 });
 
@@ -72,7 +82,9 @@ router.delete('/removeProduct', authCheck, async (req, res, next) => {
         }
         res.redirect('/cart')
     } catch (error) {
-        next(error)
+        const errMsg = 'Error occured while deleting product from the cart.'
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 });
 
@@ -95,7 +107,8 @@ router.delete('/reduceProduct', authCheck, async (req, res, next) => {
         }
 
         if (curQty === 0) {
-            res.send('No product in the cart with product ID: ', [productId]);
+            logger.info(`No product in the cart with product ID# ${productId} at "${req.path}"`)
+            res.status(404).json({ msg: 'No product in the cart with product ID# ${productId}' });
             return;
         }
 
@@ -116,7 +129,9 @@ router.delete('/reduceProduct', authCheck, async (req, res, next) => {
             )
         }
     } catch (error) {
-        next(error)
+        const errMsg = 'Error occured while reducing the qty of the product in the cart.'
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 
     res.redirect('/cart')

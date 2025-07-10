@@ -9,6 +9,10 @@ const { sequelize } = require('./db/database');
 
 const passport = require('./db/auth/passport');
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled rejection of promise: ', reason);
+});
+
 sequelize.authenticate()
     .then(() => {
         console.log('DB connection established')
@@ -26,11 +30,6 @@ app.use(session(sessionConfig));
 app.use(express.urlencoded());
 app.use(express.json());
 app.use('/static', express.static(path.join(__dirname, 'public')));
-
-// const passport = require('passport');
-// const PassportLocalStrategy = require('passport-local').Strategy;
-
-// const { User } = require('./db/database');
 
 app.use(passport.initialize());
 app.use(passport.session());

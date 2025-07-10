@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const logger = require('../utilities/logger');
+
 const { sequelize } = require('../../db/database');
 
 const { User, Product, Order } = require('../../db/database').models;
 
-const { modelMethodsDisplay, authCheck, retreiveUserCart } = require('../utilities/utilities');
+const { authCheck, retreiveUserCart, routeErrorsScript } = require('../utilities/utilities');
 
 router.get('/', authCheck, async (req, res, next) => {
     try {
@@ -19,13 +21,15 @@ router.get('/', authCheck, async (req, res, next) => {
         });
 
         if (!orders) {
-            res.send('There are no orders made yet...');
+            logger.info(`There are no orders made yet at "${req.path}".`)
+            res.status(204).json({ msg: 'There are no orders made yet.' });
             return;
         }
-        res.json(orders);
+        res.status(200).json(orders);
     } catch (error) {
-        console.error('Error fetching orders: ', error);
-        next(error);
+        const errMsg = 'Error fetching orders.';
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 });
 
@@ -43,8 +47,6 @@ router.post('/cartToOrder', authCheck, async (req, res, next) => {
                 qty: product.CartsProducts.qty
             }
         })
-        console.log('Through Data:', throughData);
-        console.log('Cart items:', cartItems)
 
         await order.addProducts(cartItems, {
             through: throughData,
@@ -53,11 +55,12 @@ router.post('/cartToOrder', authCheck, async (req, res, next) => {
 
         await transaction.commit();
 
-        res.json(order);
+        res.status(200).json(order);
 
     } catch (error) {
-        console.error('Error during order creation...')
-        next(error)
+        const errMsg = 'Error during order creation.';
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 
 });
@@ -68,14 +71,17 @@ router.delete('/cancel', authCheck, async (req, res, next) => {
 
         const delOrder = await Order.destroy({ where: { id: orderId } });
 
-        if (delOrder === 0) {
-            res.render(`No order with # ${orderId} found in the system`);
+        if (!delOrder) {
+            logger.info(`No order with # ${orderId} found in the system at "${req.path}"`);
+            res.status(404).json({ msg: `No order with # ${orderId} found in the system` });
             return
         }
-        res.status(200).json({ msg: `Order # ${orderId} was deleted successfully` });
+        logger.info(`Order # ${orderId} was deleted successfully by user ID ${req.user.id} at ${req.path}`)
+        res.status(204).json({ msg: `Order # ${orderId} was deleted successfully` });
     } catch (error) {
-        console.error(`Error while deleting order...`);
-        next(error)
+        const errMsg = 'Error while deleting order.';
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
     }
 })
 

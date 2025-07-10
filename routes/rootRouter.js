@@ -21,8 +21,13 @@ router.use('/admin', adminProductsRouter);
 
 router.use(
     (err, req, res, next) => {
-        console.error('Error: ', err);
-        res.send(err);
+
+        logger.error(err.message, err.stack);
+
+        res.status(err.status).json({
+            msg: err.message || 'Internal server error'
+        })
+
     }
 )
 

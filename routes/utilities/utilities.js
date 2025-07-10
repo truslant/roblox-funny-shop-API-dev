@@ -1,4 +1,6 @@
+const createError = require('http-errors')
 const { User, Product } = require('../../db/database').models
+const logger = require('../utilities/logger');
 
 const authCheck = (req, res, next) => {
     if (!req.isAuthenticated()) {
@@ -46,4 +48,14 @@ const retreiveUserCart = async (req) => {
     return { user, cart }
 }
 
-module.exports = { authCheck, isAdmin, modelMethodsDisplay, retreiveUserCart };
+const routeErrorsScript = (next, error, statusCode, errMsg = 'Error occured') => {
+    if (error.name === 'SequelizeValidationError') {
+        logger.error(`Sequelize validation error: ${errMsg}`, { error })
+        res.status(400).json({ msg: 'Validation error' });
+        return;
+    }
+
+    next(createError(statusCode, errMsg));
+}
+
+module.exports = { authCheck, isAdmin, modelMethodsDisplay, retreiveUserCart, routeErrorsScript };
