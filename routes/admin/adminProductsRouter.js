@@ -8,9 +8,16 @@ const { isAdmin } = require('../utilities/utilities')
 
 router.post('/addProduct', isAdmin, async (req, res, next) => {
     try {
-        const { name, description, price } = req.body;
+        const validCategory = ['general', 'outerwear', 'pants', 'skirts', 'headwear', 'accessories', 'shoes']
+
+        const { name, description, price, category } = req.body;
+
+        if (!validCategory.includes(category)) {
+            
+        }
+
         const newProduct = await Product.create({
-            name, description, price
+            name, description, price, category
         })
         res.status(201).json(newProduct)
     } catch (error) {

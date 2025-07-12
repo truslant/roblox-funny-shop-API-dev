@@ -69,6 +69,16 @@ const retreiveAllProducts = async (req, res, next) => {
     }
 }
 
+const validCategory = ['general', 'outerwear', 'pants', 'skirts', 'headwear', 'accessories', 'shoes']
 
+const validCategoryString = (validCategoryArray) => (
+    validCategoryArray.reduce((accum, curvalue, index) => {
+        if (index < validCategoryArray.length - 1) {
+            return `'${accum}', '${curvalue}', `
+        } else {
+            return `'${accum}', '${curvalue}'`
+        }
+    })
+)
 
-module.exports = { authCheck, isAdmin, modelMethodsDisplay, retreiveUserCart, routeErrorsScript, retreiveAllProducts };
+module.exports = { authCheck, isAdmin, modelMethodsDisplay, retreiveUserCart, routeErrorsScript, retreiveAllProducts, validCategory, validCategoryString };

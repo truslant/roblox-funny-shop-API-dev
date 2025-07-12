@@ -1,3 +1,5 @@
+const { validCategory, validCategoryString } = require('../../routes/utilities/utilities');
+
 const getProductModel = (sequelize, { DataTypes }) => {
     const Product = sequelize.define('Product',
         {
@@ -17,6 +19,14 @@ const getProductModel = (sequelize, { DataTypes }) => {
             price: {
                 type: DataTypes.DECIMAL(10, 2),
                 allowNull: false
+            },
+            category: {
+                type: DataTypes.ENUM(validCategoryString(validCategory)),
+                allowNull: false,
+                default: 'general',
+                validate: {
+                    noteEmpty: true
+                }
             }
         },
         {

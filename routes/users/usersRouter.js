@@ -17,6 +17,21 @@ router.post('/register', async (req, res, next) => {
 
     const { firstname, lastname, email, password, passwordCheck } = req.body;
 
+    const user = User.findOne(
+        {
+            where: {
+                email,
+            }
+        }
+    )
+
+    if (user) {
+        logger.info(`Attempt to register with existing email: ${email} at route ${req.path}.`)
+        res.status(409).json({
+            msg: `User with the ${email} is already registered.`
+        })
+    }
+
     if (password != passwordCheck) {
         logger.info(`Password and Re-enter password do not match at "${req.path}" route`)
         res.status(409).json({ msg: 'Password and Re-enter password do not match.' });
