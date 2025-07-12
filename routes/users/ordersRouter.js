@@ -33,6 +33,35 @@ router.get('/', authCheck, async (req, res, next) => {
     }
 });
 
+router.get('/order/:orderId', authCheck, async (req, res, next) => {
+    const { orderId } = req.params;
+    try {
+        const order = await Order.findOne({
+            where: {
+                userid: req.user.id,
+                id: orderId
+            },
+            include: {
+                model: Product,
+                through: {
+                    attributes: ['qty']
+                }
+            }
+        });
+
+        if (!order) {
+            logger.info(`No order with ID ${orderId} found for user ID ${req.user.id} at "${req.path}".`)
+            res.status(204).json({ msg: `There are no orders made with ID ${orderId}.` });
+            return;
+        }
+        res.status(200).json(order)
+    } catch (error) {
+        const errMsg = `Error fetching order with ID ${orderId}`;
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
+    }
+});
+
 router.post('/cartToOrder', authCheck, async (req, res, next) => {
     try {
         const { cart, user } = await retreiveUserCart(req);
@@ -56,33 +85,11 @@ router.post('/cartToOrder', authCheck, async (req, res, next) => {
         await transaction.commit();
 
         res.status(200).json(order);
-
     } catch (error) {
         const errMsg = 'Error during order creation.';
         routeErrorsScript(next, error, 500, errMsg);
         return;
     }
-
 });
-
-router.delete('/cancel', authCheck, async (req, res, next) => {
-    try {
-        const { orderId } = req.body;
-
-        const delOrder = await Order.destroy({ where: { id: orderId } });
-
-        if (!delOrder) {
-            logger.info(`No order with # ${orderId} found in the system at "${req.path}"`);
-            res.status(404).json({ msg: `No order with # ${orderId} found in the system` });
-            return
-        }
-        logger.info(`Order # ${orderId} was deleted successfully by user ID ${req.user.id} at ${req.path}`)
-        res.status(204).json({ msg: `Order # ${orderId} was deleted successfully` });
-    } catch (error) {
-        const errMsg = 'Error while deleting order.';
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
-    }
-})
 
 module.exports = router;

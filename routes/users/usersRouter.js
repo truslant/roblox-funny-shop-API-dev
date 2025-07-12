@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../../db/auth/passport');
-const createError = require('http-errors');
 const logger = require('../utilities/logger');
 
 const { User } = require('../../db/database').models
@@ -42,7 +41,7 @@ router.post('/register', async (req, res, next) => {
 
 router.put('/update', authCheck, async (req, res, next) => {
 
-    const { firstname, lastname, email, password, newPassword, newPasswordCheck } = req.body;
+    const { firstname, lastname, email, password, newPassword, newPasswordCheck, status } = req.body;
 
     try {
         const user = await User.findByPk(req.user.id);
@@ -64,12 +63,14 @@ router.put('/update', authCheck, async (req, res, next) => {
                 firstname,
                 lastname,
                 email,
-                password: await bcrypt.hash(newPassword, 12)
+                password: await bcrypt.hash(newPassword, 12),
+                status
             } :
             {
                 firstname,
                 lastname,
-                email
+                email,
+                status
             };
 
         Object.keys(userData).forEach(key => {
@@ -87,6 +88,10 @@ router.put('/update', authCheck, async (req, res, next) => {
     }
 });
 
+router.get('/login', (req, res, next) => {
+    res.redirect('/static/index.html');
+})
+
 router.post('/login',
     passport.authenticate(
         'local',
@@ -97,9 +102,10 @@ router.post('/login',
     ),
     (req, res, next) => {
         console.log('Authentication succeded!')
-        res.redirect('/');
+        res.redirect('/user/profile');
     }
 )
+
 
 router.get('/logout', (req, res, next) => {
     req.logout(err => {
@@ -108,9 +114,5 @@ router.get('/logout', (req, res, next) => {
         res.redirect('/users/login')
     });
 });
-
-router.get('/login', (req, res, next) => {
-    res.redirect('/static/index.html');
-})
 
 module.exports = router;    

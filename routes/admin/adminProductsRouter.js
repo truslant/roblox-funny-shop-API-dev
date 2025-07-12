@@ -6,17 +6,6 @@ const { Product } = require('../../db/database').models
 
 const { isAdmin } = require('../utilities/utilities')
 
-router.get('/allProducts', isAdmin, async (req, res, next) => {
-    try {
-        const products = await Product.findAll({});
-        res.status(200).json(products)
-    } catch (error) {
-        const errMsg = 'Error while retreiving list of all products.';
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
-    }
-});
-
 router.post('/addProduct', isAdmin, async (req, res, next) => {
     try {
         const { name, description, price } = req.body;

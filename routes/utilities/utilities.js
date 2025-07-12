@@ -58,4 +58,17 @@ const routeErrorsScript = (next, error, statusCode, errMsg = 'Error occured') =>
     next(createError(statusCode, errMsg));
 }
 
-module.exports = { authCheck, isAdmin, modelMethodsDisplay, retreiveUserCart, routeErrorsScript };
+const retreiveAllProducts = async (req, res, next) => {
+    try {
+        const products = await Product.findAll({});
+        res.status(200).json(products)
+    } catch (error) {
+        const errMsg = 'Error while retreiving list of all products.';
+        routeErrorsScript(next, error, 500, errMsg);
+        return;
+    }
+}
+
+
+
+module.exports = { authCheck, isAdmin, modelMethodsDisplay, retreiveUserCart, routeErrorsScript, retreiveAllProducts };

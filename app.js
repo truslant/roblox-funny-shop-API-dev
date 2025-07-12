@@ -1,4 +1,3 @@
-// const crypto = require('crypto');
 const dotenv = require('dotenv');
 dotenv.config();
 const path = require('path')
@@ -40,7 +39,6 @@ app.use(rootRouter);
 
 const port = process.env.PORT || 3001
 app.listen(port, () => {
-    // console.log(crypto.randomBytes(32).toString('hex'));
     console.log(`Server is running on port ${port}...`)
 });
 

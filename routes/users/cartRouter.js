@@ -128,14 +128,12 @@ router.delete('/reduceProduct', authCheck, async (req, res, next) => {
                 }
             )
         }
+        res.redirect('/cart')
     } catch (error) {
         const errMsg = 'Error occured while reducing the qty of the product in the cart.'
         routeErrorsScript(next, error, 500, errMsg);
         return;
     }
-
-    res.redirect('/cart')
-
 });
 
 module.exports = router;

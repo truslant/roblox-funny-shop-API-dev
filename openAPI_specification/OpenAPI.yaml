@@ -1,0 +1,615 @@
+openapi: "3.0.3"
+info:
+  title: Dummy Roblox Shop
+  version: "1.0"
+  description: A Codecademy exercise building for fun very basic online e-store - Roblox Shop API
+servers:
+  - url: https://api.server.test/v1
+tags:
+  - name: Users
+    description: Users related operations
+  - name: Cart
+    description: Cart related operations
+  - name: Products
+    description: Product related operations
+  - name: Orders
+    description: Orders related operations
+  - name: Admin
+    description: Operations of Administrator level
+security:
+  - BasicAuth: []
+
+paths:
+  /users/login:
+    summary: User login
+    description: This path is used for logging registered users in.
+    post:
+      tags:
+        - Users
+      summary: Log user in
+      description: Enables user logging in. Requires user credentials passed as object
+      operationId: login_user
+      security: []
+      requestBody:
+        description: Passing User credentials
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCredentials"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/UserCredentials"
+      responses:
+        "303":
+          description: User successfully logged in and redirected to profile page
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /users/register:
+    summary: Allows user registration
+    description: This path is used for registration of new users.
+    post:
+      tags:
+        - Users
+      summary: Register new user
+      description: Insert new user personal data into DB for registration
+      security: []
+      operationId: add_user_profile
+      requestBody:
+        description: User registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaseUser"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/BaseUser"
+      responses:
+        "303":
+          description: User registration successful, user redirected to login page.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /users/profile:
+    summary: Get the user details
+    description: This path is used for retreiving User Data for authorized users.
+    get:
+      tags:
+        - Users
+      summary: Retreive user profile
+      description: Retreives the User related information from DB if the user is signed in.
+      security:
+        - BasicAuth: []
+      operationId: get_user_profile
+      responses:
+        "200":
+          description: User data retreived successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/update:
+    summary: Allows user profile update
+    description: This path is used for updating user information.
+    post:
+      tags:
+        - Users
+      summary: Update user records
+      description: Enables update of User Profile related data if user is singed in.
+      operationId: update_user_profile
+      requestBody:
+        description: Updated User data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "303":
+          description: User record update successful, user redirected to profile page.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /users/logout:
+    summary: User logout
+    description: This path is used for logging users out
+    get:
+      tags:
+        - Users
+      summary: Log user out
+      description: Log out and redirects user to the login page
+      security: []
+      operationId: logout_user
+      responses:
+        "303":
+          description: User successfully logged out and redirected to login page
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /products/product:
+    summary: Get product data
+    description: This path is used for retreiving a single product data
+    get:
+      tags:
+        - Products
+      summary: Get product details
+      description: Retreive product data based on product ID
+      operationId: get_product
+      requestBody:
+        description: Passing product Id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductId"
+      responses:
+        "200":
+          description: Product data retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /products/allProducts:
+    summary: Get all products from DB
+    description: This path is used for retreiving all products from DB
+    get:
+      tags:
+        - Products
+      summary: Retrieve all products from DB
+      description: Retreive all products from DB
+      operationId: get_all_products
+      responses:
+        "200":
+          description: All products data successfully retreived from DB
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /cart:
+    summary: Getting cart
+    description: This path is used for retreiving cart details if user is logged in.
+    get:
+      tags:
+        - Cart
+      summary: Get user cart
+      description: Retreive Cart data for logged in user.
+      operationId: get_cart
+      responses:
+        "200":
+          description: Cart data retreived successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  userid:
+                    type: integer
+                  Products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CartProductWithQty"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /cart/addProduct:
+    summary: Add product to Cart
+    description: This route is used for adding product to a cart or increasing qty of the product in the cart
+    post:
+      summary: Add item or Increase Cart item Qty
+      description: Add product or increase product qty
+      tags:
+        - Cart
+      operationId: cart_add_product
+      requestBody:
+        description: Passing product Id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductId"
+      responses:
+        "303":
+          description: Product added or qty increased successfully, user redirected to Cart
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /cart/removeProduct:
+    summary: Remove product from Cart based on product ID
+    description: This route is used for removal of Product from the Cart
+    delete:
+      summary: Remove item from Cart
+      description: Delete product from Cart
+      tags:
+        - Cart
+      operationId: cart_detete_product
+      requestBody:
+        description: Passing product Id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductId"
+      responses:
+        "303":
+          description: Product removed from Cart successfully, user redirected to Cart
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /cart/reduceProduct:
+    summary: Reduce or Remove product from the Cart
+    description: This route is used for reducing qty of product from the Cart or removing the Product from the Cart
+    delete:
+      summary: Reduce Qty or Remove item from Cart
+      description: Reduce qty or remove product from Cart
+      operationId: cart_reduce_product
+      tags:
+        - Cart
+      requestBody:
+        description: Passing product Id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductId"
+      responses:
+        "303":
+          description: Product qty reduce or product removed from cart successfully, user redirected to Cart.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /orders:
+    summary: Retreive all User orders
+    description: This path is used for retreiving all orders of the logged in user
+    get:
+      summary: Get all orders of User with order details
+      description: Get all User Orders
+      operationId: get_orders
+      tags:
+        - Orders
+      responses:
+        "200":
+          description: All orders data retreived successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    userid:
+                      type: integer
+                    Products:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/OrderProductWithQty"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /orders/order/:orderId:
+    summary: Get specific orders
+    description: This path is used for retreiving specific order based on passed ID
+    get:
+      summary: Get specific order details
+      description: Get specific order based on order Id
+      tags:
+        - Orders
+      operationId: get_order
+      parameters:
+        - $ref: "#/components/parameters/orderIdPathParameter"
+      responses:
+        "200":
+          description: All orders data retreived successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  userid:
+                    type: integer
+                  Products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OrderProductWithQty"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /orders/cartToOrder:
+    summary: Creates order from Cart items
+    description: This path is used for transition of Cart items to actual Order
+    post:
+      summary: Create Order from Cart
+      description: Create order from Cart
+      operationId: cart_to_order
+      tags:
+        - Orders
+      responses:
+        "200":
+          description: Order created successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: order ID
+                  userid:
+                    type: integer
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/products/addProduct:
+    summary: Add produtct to DB
+    description: This path is used for adding a new Product to the DB
+    post:
+      summary: Add product to DB
+      description: Add passed object as product to the DB
+      operationId: admin_add_product
+      tags:
+        - Admin
+        - Products
+      requestBody:
+        description: Object with Porduct properties
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaseProduct"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/BaseProduct"
+      responses:
+        "201":
+          description: Product added to DB successfully, new product object retured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseProduct"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/products/removeProduct:
+    summary: Delete product from DB
+    description: This path is used for deletion of product record from the DB
+    delete:
+      summary: Delete product from DB
+      description: Delete product from DB based on the product ID passed
+      operationId: admin_delete_product
+      tags:
+        - Admin
+        - Products
+      requestBody:
+        description: request body should containt object with product Id
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductId"
+
+      responses:
+        "200":
+          description: Product deleted successfully with confirmation message sent back as a responses object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationMessage"
+  /admin/products/editProduct:
+    summary: Edit product details
+    description: This path is used for editing the product details
+    put:
+      summary: Update product details
+      description: Updated product details based on the product object passed in the request body
+      operationId: admin_update_product
+      tags:
+        - Admin
+        - Products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        "200":
+          description: Product details updated successfully. New product details object sent back.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/orders/cancel:
+    summary: Cancel existing order
+    description: This path is used for canceling the existing orders
+    delete:
+      summary: Delete Order
+      description: Deletes order based on order ID
+      operationId: admin_order_delete
+      tags:
+        - Admin
+        - Orders
+      requestBody:
+        description: Object with order ID
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderId"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/OrderId"
+      responses:
+        "204":
+          description: Order deleted successfully with confirmation message sent back as a responses object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationMessage"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  parameters:
+    orderIdPathParameter:
+      name: orderId
+      description: Order Id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    BaseUser:
+      type: object
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        status:
+          type: string
+      required:
+        - firstname
+        - lastname
+        - email
+        - password
+        - status
+    User:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+        - $ref: "#/components/schemas/BaseUser"
+    UserUpdate:
+      allOf:
+        - $ref: "#/components/schemas/BaseUser"
+        - type: object
+          properties:
+            newPassword:
+              type: string
+              nullable: true
+            newPasswordCheck:
+              type: string
+              nullable: true
+    UserCredentials:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+    ProductId:
+      type: object
+      properties:
+        productId:
+          type: integer
+      required:
+        - productId
+    BaseProduct:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+      required:
+        - name
+        - description
+        - price
+    Product:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+          required: [id]
+        - $ref: "#/components/schemas/BaseProduct"
+    CartProductWithQty:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            CartsProducts:
+              type: object
+              properties:
+                qty:
+                  type: integer
+    OrderId:
+      type: object
+      properties:
+        orderId:
+          type: integer
+      required:
+        - orderId
+    OrderProductWithQty:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            "OrdersProducts":
+              type: object
+              properties:
+                qty:
+                  type: integer
+                  nullable: false
+    OperationMessage:
+      type: object
+      properties:
+        msg:
+          description: Server response message
+          type: string
+  headers:
+    Location:
+      description: The redirect URI
+      schema:
+        type: string
+        example: /user/profile
+  responses:
+    InternalServerError:
+      description: Error at server end.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                description: Error message
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
