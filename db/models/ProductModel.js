@@ -1,4 +1,4 @@
-const { validCategory, validCategoryString } = require('../../routes/utilities/utilities');
+const { validProductCategories } = require('../../variables/projectwideVariables')
 
 const getProductModel = (sequelize, { DataTypes }) => {
     const Product = sequelize.define('Product',
@@ -21,11 +21,12 @@ const getProductModel = (sequelize, { DataTypes }) => {
                 allowNull: false
             },
             category: {
-                type: DataTypes.ENUM(validCategoryString(validCategory)),
+                type: DataTypes.TEXT,
                 allowNull: false,
                 default: 'general',
                 validate: {
-                    noteEmpty: true
+                    notEmpty: true,
+                    isIn: [validProductCategories]
                 }
             }
         },

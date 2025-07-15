@@ -139,7 +139,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /products/product:
+  /products/product/:productId:
     summary: Get product data
     description: This path is used for retreiving a single product data
     get:
@@ -148,12 +148,8 @@ paths:
       summary: Get product details
       description: Retreive product data based on product ID
       operationId: get_product
-      requestBody:
-        description: Passing product Id
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProductId"
+      parameters:
+        - $ref: "#/components/parameters/productIdPathParameter"
       responses:
         "200":
           description: Product data retrieved successfully.
@@ -175,6 +171,28 @@ paths:
       responses:
         "200":
           description: All products data successfully retreived from DB
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /products/productCategory/:category:
+    summary: Retreive all products with details within a category
+    description: This path is used for retreiving array of product objects under defined category
+    get:
+      summary: Get all products in category
+      description: Get all products sharing requested Category
+      operationId: get_products_in_category
+      tags:
+        - Products
+      parameters:
+        - $ref: "#/components/parameters/categoryIdPathParameter"
+      responses:
+        "200":
+          description: Products under the indicated category retreived successfully
           content:
             application/json:
               schema:
@@ -474,6 +492,13 @@ paths:
 
 components:
   parameters:
+    productIdPathParameter:
+      name: orderId
+      description: Order ID number
+      in: path
+      required: true
+      schema:
+        type: integer
     orderIdPathParameter:
       name: orderId
       description: Order Id
@@ -481,6 +506,13 @@ components:
       required: true
       schema:
         type: integer
+    categoryIdPathParameter:
+      name: category
+      description: Category name
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     BaseUser:
       type: object
@@ -546,10 +578,23 @@ components:
         price:
           type: number
           format: double
+        category:
+          type: string
+          enum:
+            [
+              "general",
+              "outerwear",
+              "pants",
+              "skirts",
+              "headwear",
+              "accessories",
+              "shoes",
+            ]
       required:
         - name
         - description
         - price
+        - category
     Product:
       allOf:
         - type: object

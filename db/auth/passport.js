@@ -1,5 +1,6 @@
 const passport = require('passport');
 const PassportLocalStrategy = require('passport-local').Strategy;
+const logger = require('winston')
 
 const bcrypt = require('bcrypt');
 
@@ -21,17 +22,16 @@ passport.use(
             // console.log('User password: ', user.password)
 
             if (!user) {
-                console.error('User not found');
-                return done(null, false, { message: 'User not found' })
+                logger.info(`Passportjs local strategy authentication failure - User not found for username:`, username);
+                return done(null, false, { message: 'Incorrect User or Password' })
             }
 
             const passMatch = await bcrypt.compare(password, user.password)
 
             if (!passMatch) {
-                console.error('Password incorrect');
-                return done(null, false, { message: 'Incorrect password' })
+                logger.info(`Passportjs local strategy authentication failure - Incorrect passport "${passport}" attempted for username "${username}"`);
+                return done(null, false, { message: 'Incorrect User or Password' })
             }
-
             return done(null, user)
         } catch (error) {
             done(error)

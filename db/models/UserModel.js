@@ -50,6 +50,7 @@ const getUserModel = (sequelize, { DataTypes }) => {
             timestamps: false
         }
     )
+
     return User;
 }
 

@@ -34,3 +34,4 @@ FROM
     INNER JOIN orders ON users.id = orders.userid
     INNER JOIN orders_products ON orders_products.orderid = orders.id
     INNER JOIN products ON orders_products.productid = products.id
+

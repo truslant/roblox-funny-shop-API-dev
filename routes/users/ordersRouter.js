@@ -1,12 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utilities/logger');
+const createError = require('http-errors');
+const { param, body } = require('express-validator')
 
 const { sequelize } = require('../../db/database');
 
 const { User, Product, Order } = require('../../db/database').models;
 
-const { authCheck, retreiveUserCart, routeErrorsScript } = require('../utilities/utilities');
+const {
+    authCheck,
+    routeErrorsScript,
+    validationErrorsOutputScript } = require('../utilities/generalUtilities');
+
+const { retreiveUserCart } = require('../utilities/modelUtilities');
 
 router.get('/', authCheck, async (req, res, next) => {
     try {
@@ -21,50 +28,60 @@ router.get('/', authCheck, async (req, res, next) => {
         });
 
         if (!orders) {
-            logger.info(`There are no orders made yet at "${req.path}".`)
-            res.status(204).json({ msg: 'There are no orders made yet.' });
-            return;
+            return next(createError(204, `There are no orders made yet for user with ID ${req.user.id}`));
         }
+
         res.status(200).json(orders);
+
     } catch (error) {
         const errMsg = 'Error fetching orders.';
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
+        return next(routeErrorsScript(error, errMsg));
     }
 });
 
-router.get('/order/:orderId', authCheck, async (req, res, next) => {
-    const { orderId } = req.params;
-    try {
-        const order = await Order.findOne({
-            where: {
-                userid: req.user.id,
-                id: orderId
-            },
-            include: {
-                model: Product,
-                through: {
-                    attributes: ['qty']
+router.get('/order/:orderId', authCheck,
+    [
+        param('orderId')
+            .notEmpty().withMessage('Order ID cannot be empty')
+            .isInt({ min: 1 }).withMessage('Order ID must be a number (min:1)')
+    ],
+    async (req, res, next) => {
+
+        const { orderId } = req.params;
+
+        validationErrorsOutputScript(req)
+
+        try {
+            const order = await Order.findOne({
+                where: {
+                    userid: req.user.id,
+                    id: orderId
+                },
+                include: {
+                    model: Product,
+                    through: {
+                        attributes: ['qty']
+                    }
                 }
+            });
+            if (!order) {
+                return next(createError(404, `There are no orders made with ID ${orderId}.`));
             }
-        });
+            res.status(200).json(order)
 
-        if (!order) {
-            logger.info(`No order with ID ${orderId} found for user ID ${req.user.id} at "${req.path}".`)
-            res.status(204).json({ msg: `There are no orders made with ID ${orderId}.` });
-            return;
+        } catch (error) {
+            const errMsg = `Error fetching order with ID ${orderId}`;
+            return next(routeErrorsScript(error, errMsg));
         }
-        res.status(200).json(order)
-    } catch (error) {
-        const errMsg = `Error fetching order with ID ${orderId}`;
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
-    }
-});
+    });
 
 router.post('/cartToOrder', authCheck, async (req, res, next) => {
     try {
         const { cart, user } = await retreiveUserCart(req);
+
+        if (cart.Products.length < 1) {
+            return next(createError(400, `No products found in the Cart ID ${cart.id}`));
+        }
 
         const transaction = await sequelize.transaction();
 
@@ -84,11 +101,10 @@ router.post('/cartToOrder', authCheck, async (req, res, next) => {
 
         await transaction.commit();
 
-        res.status(200).json(order);
+        res.redirect(`/orders/order/${order.id}`);
     } catch (error) {
         const errMsg = 'Error during order creation.';
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
+        return next(routeErrorsScript(error, errMsg));
     }
 });
 

@@ -1,70 +1,127 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utilities/logger');
+const createError = require('http-errors')
 
-const { Product } = require('../../db/database').models
+const { Product } = require('../../db/database').models;
 
-const { isAdmin } = require('../utilities/utilities')
+const { isAdmin,
+    checkProductInputForValidity,
+    productExistanceCheck } = require('../utilities/modelUtilities');
 
-router.post('/addProduct', isAdmin, async (req, res, next) => {
-    try {
-        const validCategory = ['general', 'outerwear', 'pants', 'skirts', 'headwear', 'accessories', 'shoes']
 
-        const { name, description, price, category } = req.body;
+const {
+    validProductCategories } = require('../../variables/projectwideVariables')
 
-        if (!validCategory.includes(category)) {
-            
+const {
+    validCategoriesToString,
+    routeErrorsScript,
+    validationErrorsOutputScript } = require('../utilities/generalUtilities');
+
+const {
+    bodyOrderIdValidator,
+    bodyProductIdValidator,
+    paramOrderIdValidator,
+    bodyProductNameValidateor,
+    bodyProductDescriptionValidateor,
+    bodyProductPriceValidateor,
+    bodyProductCategoryValidateor, } = require('../utilities/validations')
+
+
+router.post('/addProduct', isAdmin,
+    [
+        bodyProductNameValidateor(),
+        bodyProductDescriptionValidateor(),
+        bodyProductPriceValidateor(),
+        bodyProductCategoryValidateor(),
+    ],
+    async (req, res, next) => {
+        try {
+
+            const { name, description, price, category } = req.body;
+
+            validationErrorsOutputScript(req)
+
+            const inputObject = { name, description, price, category }
+
+            checkProductInputForValidity(inputObject);
+
+            const newProduct = await Product.create(inputObject);
+            res.status(201).json(newProduct)
+        } catch (error) {
+            const errMsg = 'Error occured while adding a new product to DB.';
+            return next(routeErrorsScript(error, errMsg));
         }
+    });
 
-        const newProduct = await Product.create({
-            name, description, price, category
-        })
-        res.status(201).json(newProduct)
-    } catch (error) {
-        const errMsg = 'Error occured while adding a new product to DB.';
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
-    }
+router.delete('/removeProduct', isAdmin,
+    [
+        bodyProductIdValidator()
+    ],
+    async (req, res, next) => {
 
-});
-
-router.delete('/removeProduct', isAdmin, async (req, res, next) => {
-    try {
         const { productId } = req.body;
-        const deletedProduct = Product.destroy({ where: { id: productId } });
-        if (!deletedProduct) {
-            logger.info(`No product with ID ${productId} found in the DB at "${req.path}"`)
-            res.status(404).json({ msg: `No product with ID ${productId} found in the DB` });
-            return;
-        }
-        res.status(200).json({ msg: `Product with ID # ${productId} deleted successfully!` })
-    } catch (error) {
-        const errMsg = 'Error occured while deleting the product from DB'
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
-    }
-});
+        validationErrorsOutputScript(req);
 
-router.put('/editProduct', isAdmin, async (req, res, next) => {
+        try {
 
-    try {
-        const { productId, name, description, price } = req.body;
-        const curProduct = await Product.update(
-            { name, description, price },
-            { where: { id: productId } }
-        );
-        if (!curProduct) {
-            logger.info(`No product with ID ${id} found in the DB at ${req.path} by user id ${req.user.id}`)
-            res.status(404).json({ msg: `No product with ID ${id} found in the DB` })
-            return
+            const deletedProduct = await Product.destroy({ where: { id: productId } });
+
+            if (!deletedProduct) {
+                return next(createError(404, `No product with ID ${productId} found in the DB`));
+            }
+
+            res.status(200).json({ message: `Product with ID # ${productId} deleted successfully!` })
+
+        } catch (error) {
+            const errMsg = 'Error occured while deleting the product from DB';
+            return next(routeErrorsScript(error, errMsg));
         }
-        const editedProduct = await Product.findByPk(productId);
-        res.status(200).json(editedProduct)
-    } catch (error) {
-        const errMsg = 'Error occured while updating the product.'
-        routeErrorsScript(next, error, 500, errMsg);
-        return;
-    }
-});
+    });
+
+router.put('/editProduct', isAdmin,
+    [
+        bodyProductIdValidator(),
+        bodyProductNameValidateor().optional({ values: 'falsy' }),
+        bodyProductDescriptionValidateor().optional({ values: 'falsy' }),
+        bodyProductPriceValidateor()
+            .custom(value => value >= 0).withMessage('Negative price indicated. Minimal price is 0')
+            .optional({ values: 'null' }),
+        bodyProductCategoryValidateor().optional({ values: 'falsy' }),
+    ],
+
+    async (req, res, next) => {
+
+        const { productId, name, description, price, category } = req.body;
+        validationErrorsOutputScript(req);
+
+        try {
+
+            const product = await productExistanceCheck(productId);
+
+            const inputObject = { name, description, price, category };
+
+            const outputObject = {}
+
+            Object.keys(inputObject).forEach(key => {
+                if (inputObject[key]) {
+                    outputObject[key] = inputObject[key]
+                }
+            })
+
+            if (Object.keys(outputObject).length < 1) {
+                return next(
+                    createError(400, 'No changes for the Product indicated in request')
+                );
+            }
+
+            await product.update(outputObject);
+
+            res.redirect(`/products/product/${productId}`)
+        } catch (error) {
+            const errMsg = 'Error occurred while updating the product.'
+            return next(routeErrorsScript(error, errMsg));
+        }
+    });
 
 module.exports = router;

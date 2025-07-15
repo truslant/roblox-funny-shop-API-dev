@@ -1,6 +1,8 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const path = require('path')
+const path = require('path');
+const logger = require('winston');
+
 
 const { session, sessionConfig } = require('./db/session/pgSessionConfig')
 
@@ -9,7 +11,7 @@ const { sequelize } = require('./db/database');
 const passport = require('./db/auth/passport');
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled rejection of promise: ', reason);
+    logger.error({ message: "Unhandled Rejection", reason, promise });
 });
 
 sequelize.authenticate()
@@ -17,6 +19,11 @@ sequelize.authenticate()
         console.log('DB connection established')
     })
     .catch(err => {
+        logger.error({
+            message: err.message || "DB connection error",
+            details: err.details || "Not available",
+            stack: stackLog || "Not available",
+        })
         console.log('DB connection error: ', err);
     })
 

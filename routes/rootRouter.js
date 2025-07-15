@@ -28,11 +28,32 @@ router.use('/admin/orders', adminOrdersRouter)
 
 router.use(
     (err, req, res, next) => {
+        const status = err.status || 500;
+        const stackLog = status >= 500 ? err.stack : "unnecessary"
 
-        logger.error(err.message, err.stack);
+        // if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        //     err.message = 'Invalid JSON input';
+        //     err.status = 400;
+        // }
 
-        res.status(err.status).json({
-            msg: err.message || 'Internal server error'
+
+        logger.error({
+            status,
+            message: err.message,
+            details: err.details || "Not available",
+            stack: stackLog || "Not available",
+            path: req.path || "Not available",
+            userId: req.user ? req.user.id : 'unauthenticated',
+            method: req.method || "Not available",
+            clientIp: req.ip || "Not available",
+            userAgent: req.header['user-agent'] || "Not available",
+            params: req.params || "Not available",
+            query: req.query || "Not available"
+        });
+
+        res.status(err.status || 500).json({
+            error: err.message || 'Internal server error',
+            details: err.details || 'Not available'
         })
 
     }
