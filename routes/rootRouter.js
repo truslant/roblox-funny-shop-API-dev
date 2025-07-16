@@ -7,7 +7,8 @@ const cartRouter = require('./users/cartRouter');
 const ordersRouter = require('./users/ordersRouter');
 const productsRouter = require('./users/productsRouter');
 const adminProductsRouter = require('./admin/adminProductsRouter');
-const adminOrdersRouter = require('./admin/adminOrdersRouter')
+const adminOrdersRouter = require('./admin/adminOrdersRouter');
+const adminUsersRouter = require('./admin/adminUsersRouter');
 
 
 router.get('/', async (req, res, next) => {
@@ -23,7 +24,8 @@ router.use('/cart', cartRouter);
 router.use('/orders', ordersRouter);
 router.use('/products', productsRouter);
 router.use('/admin/products', adminProductsRouter);
-router.use('/admin/orders', adminOrdersRouter)
+router.use('/admin/orders', adminOrdersRouter);
+router.use('/admin/users', adminUsersRouter);
 
 
 router.use(
