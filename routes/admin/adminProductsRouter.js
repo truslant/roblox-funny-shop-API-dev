@@ -1,39 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../utilities/logger');
 const createError = require('http-errors')
 
 const { Product } = require('../../db/database').models;
 
 const { isAdmin,
-    checkProductInputForValidity,
-    productExistanceCheck } = require('../utilities/modelUtilities');
+    modelInstanceExistanceCheck, } = require('../utilities/modelUtilities');
 
 
-const {
-    validProductCategories } = require('../../variables/projectwideVariables')
+const { validProductCategories } = require('../../variables/projectwideVariables')
 
 const {
-    validCategoriesToString,
     routeErrorsScript,
-    validationErrorsOutputScript } = require('../utilities/generalUtilities');
+    validationErrorsOutputScript,
+    updateOutputObjectGen } = require('../utilities/generalUtilities');
 
 const {
-    bodyOrderIdValidator,
-    bodyProductIdValidator,
-    paramOrderIdValidator,
-    bodyProductNameValidateor,
-    bodyProductDescriptionValidateor,
     bodyProductPriceValidateor,
-    bodyProductCategoryValidateor, } = require('../utilities/validations')
+    anyFieldIdValidator,
+    bodyAnyNameValidator,
+    anyEnumValidateor,
+} = require('../utilities/validations')
 
 
 router.post('/addProduct', isAdmin,
     [
-        bodyProductNameValidateor(),
-        bodyProductDescriptionValidateor(),
+        bodyAnyNameValidator('name'),
+        bodyAnyNameValidator('description'),
         bodyProductPriceValidateor(),
-        bodyProductCategoryValidateor(),
+        anyEnumValidateor('category', validProductCategories),
     ],
     async (req, res, next) => {
         try {
@@ -44,7 +39,6 @@ router.post('/addProduct', isAdmin,
 
             const inputObject = { name, description, price, category }
 
-            checkProductInputForValidity(inputObject);
 
             const newProduct = await Product.create(inputObject);
             res.status(201).json(newProduct)
@@ -56,7 +50,7 @@ router.post('/addProduct', isAdmin,
 
 router.delete('/removeProduct', isAdmin,
     [
-        bodyProductIdValidator()
+        anyFieldIdValidator('productId')
     ],
     async (req, res, next) => {
 
@@ -81,13 +75,12 @@ router.delete('/removeProduct', isAdmin,
 
 router.put('/editProduct', isAdmin,
     [
-        bodyProductIdValidator(),
-        bodyProductNameValidateor().optional({ values: 'falsy' }),
-        bodyProductDescriptionValidateor().optional({ values: 'falsy' }),
+        anyFieldIdValidator('productId'),
+        bodyAnyNameValidator('name').optional({ values: 'falsy' }),
+        bodyAnyNameValidator('description').optional({ values: 'falsy' }),
         bodyProductPriceValidateor()
-            .custom(value => value >= 0).withMessage('Negative price indicated. Minimal price is 0')
             .optional({ values: 'null' }),
-        bodyProductCategoryValidateor().optional({ values: 'falsy' }),
+        anyEnumValidateor('category', validProductCategories).optional({ values: 'falsy' }),
     ],
 
     async (req, res, next) => {
@@ -97,23 +90,11 @@ router.put('/editProduct', isAdmin,
 
         try {
 
-            const product = await productExistanceCheck(productId);
+            const product = await modelInstanceExistanceCheck(productId, Product);
 
             const inputObject = { name, description, price, category };
 
-            const outputObject = {}
-
-            Object.keys(inputObject).forEach(key => {
-                if (inputObject[key]) {
-                    outputObject[key] = inputObject[key]
-                }
-            })
-
-            if (Object.keys(outputObject).length < 1) {
-                return next(
-                    createError(400, 'No changes for the Product indicated in request')
-                );
-            }
+            const outputObject = updateOutputObjectGen(inputObject)
 
             await product.update(outputObject);
 

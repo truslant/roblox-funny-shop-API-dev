@@ -1,16 +1,17 @@
 const express = require('express');
 const router = express.Router();
 
-const { body, param, query, validationResult } = require('express-validator')
 const createError = require('http-errors');
-const logger = require('../utilities/logger')
+
+const {
+    anyFieldIdValidator,
+    anyEnumValidateor, } = require('../utilities/validations');
 
 const { Product } = require('../../db/database').models
 
 const {
     authCheck,
     routeErrorsScript,
-    validCategoriesToString,
     validationErrorsOutputScript } = require('../utilities/generalUtilities');
 
 const { validProductCategories } = require('../../variables/projectwideVariables')
@@ -28,15 +29,9 @@ router.get('/allProducts', authCheck, async (req, res, next) => {
     }
 });
 
-router.get(
-    '/productCategory',
-    authCheck,
+router.get('/productCategory', authCheck,
     [
-        query('category')
-            .notEmpty().withMessage(`Category parameter cannot be empty`)
-            .trim()
-            .isIn(validProductCategories).withMessage(value => `Invalid category "${value}" selected. Please select from: ${validCategoriesToString(validProductCategories)}`)
-
+        anyEnumValidateor('category', validProductCategories)
     ],
     async (req, res, next) => {
 
@@ -68,10 +63,7 @@ router.get(
 router.get('/product/:productId',
     authCheck,
     [
-        param('productId')
-            .notEmpty().withMessage(`Poduct ID cannot be empty`)
-            .trim()
-            .isInt({ min: 1 }).withMessage(`Product ID must be a number (min: 1)`)
+        anyFieldIdValidator('productId')
     ],
 
     async (req, res, next) => {

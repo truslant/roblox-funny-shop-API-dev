@@ -118,50 +118,21 @@ const reduceOrRemoveProduct = async (
     }
 };
 
-const productExistanceCheck = async (productId) => {
 
-    const product = await Product.findByPk(productId);
-    if (!product) {
-        throw createError(404, `No matching product in DB for this product ID: ${productId}`);
+const modelInstanceExistanceCheck = async (instaceId, Model) => {
+
+    const instance = await Model.findByPk(instaceId);
+    if (!instance) {
+        throw createError(404, `No matching ${Model.name} found in DB for ID: ${instaceId}`);
     }
-    return product;
-}
-
-const checkProductInputForValidity = (inputObject) => {
-    for (const key of Object.keys(inputObject)) {
-
-        if (!inputObject[key]) {
-            throw createError(404, `Invalid value for Product input at ${key}`);
-        }
-
-        if (key == 'category' && !validProductCategories.includes(inputObject[key])) {
-            const validCategoriesString = validCategoriesToString(validProductCategories)
-            throw createError(400, `Invalid category "${inputObject[key]}", please choose from: ${validCategoriesString}`);
-        }
-
-        if ((key === 'price' || key === 'productId') && isNaN(inputObject[key])) {
-            throw createError(404, `${key} value must be a number`);
-        }
-    }
+    return instance;
 }
 
 module.exports = {
     isAdmin,
     retreiveUserCart,
-    productExistanceCheck,
     retreiveOrderWithProductsById,
     incrementOrAddProduct,
-    checkProductInputForValidity,
-    reduceOrRemoveProduct
+    reduceOrRemoveProduct,
+    modelInstanceExistanceCheck
 };
-
-// const retreiveAllProducts = async (req, res, next) => {
-//     try {
-//         const products = await Product.findAll({});
-//         res.status(200).json(products)
-//     } catch (error) {
-//         const errMsg = 'Error while retreiving list of all products.';
-//         routeErrorsScript(next, error, 500, errMsg);
-//         return;
-//     }
-// }

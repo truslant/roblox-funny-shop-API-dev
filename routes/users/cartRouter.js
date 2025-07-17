@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../utilities/logger');
 const createError = require('http-errors');
 
-const { Product, CartsProducts } = require('../../db/database').models
+const { CartsProducts, Product } = require('../../db/database').models
 
-const { body } = require('express-validator')
+
+const { anyFieldIdValidator,
+} = require('../utilities/validations');
 
 const {
     authCheck,
@@ -14,8 +15,8 @@ const {
 
 const {
     retreiveUserCart,
-    productExistanceCheck,
     incrementOrAddProduct,
+    modelInstanceExistanceCheck,
     reduceOrRemoveProduct } = require('../utilities/modelUtilities')
 
 router.get('/', authCheck, async (req, res, next) => {
@@ -30,9 +31,7 @@ router.get('/', authCheck, async (req, res, next) => {
 
 router.post('/addProduct', authCheck,
     [
-        body('productId')
-            .notEmpty().withMessage('Product ID cannot be empty')
-            .isInt({ min: 1 }).withMessage('Product ID must be a number (min:1)')
+        anyFieldIdValidator('productId')
     ],
     async (req, res, next) => {
 
@@ -41,7 +40,7 @@ router.post('/addProduct', authCheck,
         validationErrorsOutputScript(req);
 
         try {
-            const product = await productExistanceCheck(productId);
+            const product = await modelInstanceExistanceCheck(productId, Product);
             const { cart } = await retreiveUserCart(req);
 
             incrementOrAddProduct(product, cart, productId, CartsProducts.name);
@@ -55,9 +54,7 @@ router.post('/addProduct', authCheck,
 
 router.delete('/removeProduct', authCheck,
     [
-        body('productId')
-            .notEmpty().withMessage('Product ID cannot be empty')
-            .isInt({ min: 1 }).withMessage('Product ID must be a number (min:1)')
+        anyFieldIdValidator('productId')
     ],
     async (req, res, next) => {
 
@@ -66,11 +63,11 @@ router.delete('/removeProduct', authCheck,
         validationErrorsOutputScript(req);
 
         try {
-            await productExistanceCheck(productId);
+            await modelInstanceExistanceCheck(productId, Product);
 
             const { cart } = await retreiveUserCart(req);
 
-            const targetProduct = cart.Products.find(product => product.id === productId)
+            const targetProduct = cart.Products.find(product => product.id == productId)
 
             if (!targetProduct) {
                 return next(createError(404, `No product with ID ${productId} found in the Cart.`))
@@ -86,16 +83,14 @@ router.delete('/removeProduct', authCheck,
 
 router.delete('/reduceProduct', authCheck,
     [
-        body('productId')
-            .notEmpty().withMessage('Product ID cannot be empty')
-            .isInt({ min: 1 }).withMessage('Product ID must be a number (min:1)')
+        anyFieldIdValidator('productId')
     ],
     async (req, res, next) => {
 
         const { productId } = req.body;
 
         try {
-            const product = await productExistanceCheck(productId);
+            const product = await modelInstanceExistanceCheck(productId, Product);
 
             const { cart } = await retreiveUserCart(req);
 

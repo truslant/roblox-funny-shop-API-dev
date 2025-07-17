@@ -1,15 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../../db/auth/passport');
-const { body, validationResult } = require('express-validator');
 const createError = require('http-errors');
-const logger = require('../utilities/logger');
+const bcrypt = require('bcrypt');
 
 const { User } = require('../../db/database').models
 
-const { authCheck, routeErrorsScript, validationErrorsOutputScript } = require('../utilities/generalUtilities');
+const { body } = require('express-validator');
+const {
+    bodyUserPasswordCheckValidator,
+    bodyUserEmailValidator,
+    bodyAnyNameValidator,
+    anyPasswordValidator,
+} = require('../utilities/validations');
 
-const bcrypt = require('bcrypt');
+const { authCheck,
+    routeErrorsScript,
+    validationErrorsOutputScript,
+    updateOutputObjectGen } = require('../utilities/generalUtilities');
 
 
 router.get('/profile', authCheck, (req, res, next) => {
@@ -18,42 +26,33 @@ router.get('/profile', authCheck, (req, res, next) => {
 
 router.post('/register',
     [
-        body('firstname')
-            .notEmpty().withMessage(`First Name cannot be empty`),
-        body('lastname')
-            .notEmpty().withMessage(`Last name cannot be empty`),
-        body('password')
-            .notEmpty().withMessage(`Password cannot be empty`)
-            .isStrongPassword().withMessage('Weak password, please consider at least 8 charachters, at least 1 lower case and one uppercase letters, at least one number and at least 1 special character.'),
-        body('passwordCheck')
-            .notEmpty().withMessage(`Confirm Password cannot be empty`)
-            .custom((password, { req }) => password === req.body.password).withMessage('Password & Confirm password do not match'),
-        body('email')
-            .notEmpty().withMessage(`Email cannot be empty`)
-            .trim().normalizeEmail()
-            .isEmail().withMessage(`Email must be an valid email address`),
+        bodyAnyNameValidator('firstname'),
+        bodyAnyNameValidator('lastname'),
+        anyPasswordValidator('password'),
+        bodyUserPasswordCheckValidator(),
+        bodyUserEmailValidator(),
     ],
     async (req, res, next) => {
 
-        const { firstname, lastname, email, password, passwordCheck } = req.body;
+        const { firstname, lastname, email, password } = req.body;
 
         validationErrorsOutputScript(req);
 
-        const user = await User.findOne(
-            {
-                where: {
-                    email,
-                }
-            }
-        )
-
-        if (user) {
-            return next(
-                createError(400, `User with the ${email} is already registered.`)
-            )
-        }
-
         try {
+            const user = await User.findOne(
+                {
+                    where: {
+                        email,
+                    }
+                }
+            )
+
+            if (user) {
+                return next(
+                    createError(400, `User with the ${email} is already registered.`)
+                )
+            }
+
             const hashedPassword = await bcrypt.hash(password, 12)
             await User.create({
                 firstname,
@@ -70,20 +69,12 @@ router.post('/register',
 
 router.put('/update', authCheck,
     [
-        body('firstname')
-            .notEmpty().withMessage(`First Name cannot be empty`),
-        body('lastname')
-            .notEmpty().withMessage(`Last name cannot be empty`),
-        body('email')
-            .notEmpty().withMessage(`Email cannot be empty`)
-            .trim().normalizeEmail()
-            .isEmail().withMessage(`Email must be an valid email address`),
-        body('password')
-            .notEmpty().withMessage(`Password cannot be empty`),
-        body('newPassword')
+        bodyAnyNameValidator('firstname').optional({ values: 'falsy' }),
+        bodyAnyNameValidator('lastname').optional({ values: 'falsy' }),
+        bodyUserEmailValidator().optional({ values: 'falsy' }),
+        bodyAnyNameValidator('password'),
+        anyPasswordValidator('newPassword')
             .optional({ values: 'falsy' })
-            .notEmpty().withMessage(`New Password cannot be empty`)
-            .isStrongPassword().withMessage('Weak New password, please consider at least 8 charachters, at least 1 lower case and one uppercase letters, at least one number and at least 1 special character.')
             .custom((newPassword, { req }) => newPassword !== req.body.password)
             .withMessage('New password must be different from password'),
         body('newPasswordCheck')
@@ -97,9 +88,12 @@ router.put('/update', authCheck,
     ],
     async (req, res, next) => {
 
-        const { firstname, lastname, email, password, newPassword, newPasswordCheck } = req.body;
+        const { firstname, lastname, email, password, newPassword } = req.body;
 
         validationErrorsOutputScript(req);
+
+        const outputObject = updateOutputObjectGen({ firstname, lastname, email, newPassword })
+        console.log("Output object:", outputObject);
 
         try {
             const user = await User.findByPk(req.user.id);
@@ -111,21 +105,12 @@ router.put('/update', authCheck,
                     'Incorrect current password'
                 ))
             }
+            if (newPassword) {
+                outputObject.password = await bcrypt.hash(newPassword, 12)
+            }
+            console.log("Hashed Output object:", outputObject);
 
-            const userData = newPassword ?
-                {
-                    firstname,
-                    lastname,
-                    email,
-                    password: await bcrypt.hash(newPassword, 12),
-                } :
-                {
-                    firstname,
-                    lastname,
-                    email,
-                };
-
-            await user.update(userData);
+            await user.update(outputObject);
             res.redirect('/users/profile')
 
         } catch (error) {

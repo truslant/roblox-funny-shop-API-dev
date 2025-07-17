@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../utilities/logger');
 const createError = require('http-errors');
-const { param, body } = require('express-validator')
+
+const { anyFieldIdValidator } = require('../utilities/validations');
+
 
 const { sequelize } = require('../../db/database');
 
@@ -41,9 +42,7 @@ router.get('/', authCheck, async (req, res, next) => {
 
 router.get('/order/:orderId', authCheck,
     [
-        param('orderId')
-            .notEmpty().withMessage('Order ID cannot be empty')
-            .isInt({ min: 1 }).withMessage('Order ID must be a number (min:1)')
+        anyFieldIdValidator('orderId')
     ],
     async (req, res, next) => {
 

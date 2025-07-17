@@ -2,25 +2,20 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../utilities/logger');
 const createError = require('http-errors')
-const { body } = require('express-validator');
 
 const { Order, Product, OrdersProducts } = require('../../db/database').models;
 
 const { routeErrorsScript,
-    validationErrorsOutputScript
-} = require('../utilities/generalUtilities');
+    validationErrorsOutputScript } = require('../utilities/generalUtilities');
 
 const {
     isAdmin,
-    productExistanceCheck,
     retreiveOrderWithProductsById,
     incrementOrAddProduct,
-    reduceOrRemoveProduct } = require('../utilities/modelUtilities');
+    reduceOrRemoveProduct,
+    modelInstanceExistanceCheck } = require('../utilities/modelUtilities');
 
-const {
-    bodyOrderIdValidator,
-    bodyProductIdValidator,
-    paramOrderIdValidator } = require('../utilities/validations');
+const { anyFieldIdValidator } = require('../utilities/validations');
 
 
 
@@ -54,7 +49,7 @@ router.get('/allOrders', isAdmin,
 
 router.get('/order/:orderId', isAdmin,
     [
-        paramOrderIdValidator(),
+        anyFieldIdValidator('orderId'),
     ],
 
     async (req, res, next) => {
@@ -78,7 +73,7 @@ router.get('/order/:orderId', isAdmin,
 
 router.delete('/cancel', isAdmin,
     [
-        bodyOrderIdValidator(),
+        anyFieldIdValidator('orderId'),
     ],
 
     async (req, res, next) => {
@@ -106,8 +101,8 @@ router.delete('/cancel', isAdmin,
 
 router.post('/addProduct', isAdmin,
     [
-        bodyOrderIdValidator(),
-        bodyProductIdValidator(),
+        anyFieldIdValidator('orderId'),
+        anyFieldIdValidator('productId'),
     ],
     async (req, res, next) => {
 
@@ -117,7 +112,7 @@ router.post('/addProduct', isAdmin,
 
         try {
 
-            const product = await productExistanceCheck(productId);
+            const product = await modelInstanceExistanceCheck(productId, Product);
 
             const order = await retreiveOrderWithProductsById(orderId);
 
@@ -133,8 +128,8 @@ router.post('/addProduct', isAdmin,
 
 router.delete('/removeProduct', isAdmin,
     [
-        bodyOrderIdValidator(),
-        bodyProductIdValidator(),
+        anyFieldIdValidator('orderId'),
+        anyFieldIdValidator('productId'),
     ],
 
     async (req, res, next) => {
@@ -144,7 +139,7 @@ router.delete('/removeProduct', isAdmin,
         validationErrorsOutputScript(req);
 
         try {
-            await productExistanceCheck(productId);
+            await modelInstanceExistanceCheck(productId, Product);
 
             const order = await retreiveOrderWithProductsById(orderId);
 
@@ -165,8 +160,8 @@ router.delete('/removeProduct', isAdmin,
 
 router.delete('/reduceProduct', isAdmin,
     [
-        bodyOrderIdValidator(),
-        bodyProductIdValidator(),
+        anyFieldIdValidator('orderId'),
+        anyFieldIdValidator('productId'),
     ],
 
     async (req, res, next) => {
@@ -176,7 +171,7 @@ router.delete('/reduceProduct', isAdmin,
         validationErrorsOutputScript(req);
 
         try {
-            const product = await productExistanceCheck(productId);
+            const product = await modelInstanceExistanceCheck(productId, Product);
 
             const order = await retreiveOrderWithProductsById(orderId);
 

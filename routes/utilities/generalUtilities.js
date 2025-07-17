@@ -41,5 +41,26 @@ const validationErrorsOutputScript = (req) => {
     }
 }
 
+const updateOutputObjectGen = (inputObject) => {
+    const outputObject = {}
+    Object.keys(inputObject).forEach(key => {
+        if (inputObject[key]) {
+            outputObject[key] = inputObject[key]
+        }
+    })
 
-module.exports = { authCheck, modelMethodsDisplay, routeErrorsScript, validCategoriesToString, validationErrorsOutputScript };
+    if (Object.keys(outputObject).length < 1) {
+        throw createError(400, 'No changes for the Input indicated in request')
+    }
+    return outputObject;
+}
+
+
+module.exports = {
+    authCheck,
+    modelMethodsDisplay,
+    routeErrorsScript,
+    validCategoriesToString,
+    validationErrorsOutputScript,
+    updateOutputObjectGen,
+};

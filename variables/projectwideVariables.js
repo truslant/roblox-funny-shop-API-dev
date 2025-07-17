@@ -9,6 +9,12 @@ const validProductCategories = [
     'pet',
 ]
 
+const validUserStatuses = [
+    'user',
+    'admin',
+]
+
 module.exports = {
-    validProductCategories
+    validProductCategories,
+    validUserStatuses,
 }
