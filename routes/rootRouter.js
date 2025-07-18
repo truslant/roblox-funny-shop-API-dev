@@ -33,12 +33,6 @@ router.use(
         const status = err.status || 500;
         const stackLog = status >= 500 ? err.stack : "unnecessary"
 
-        // if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        //     err.message = 'Invalid JSON input';
-        //     err.status = 400;
-        // }
-
-
         logger.error({
             status,
             message: err.message,

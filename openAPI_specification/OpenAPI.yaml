@@ -63,16 +63,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BaseUser"
+              $ref: "#/components/schemas/UserRegister"
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/BaseUser"
+              $ref: "#/components/schemas/UserRegister"
       responses:
         "303":
           description: User registration successful, user redirected to login page.
           headers:
             Location:
               $ref: "#/components/headers/Location"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /users/profile:
@@ -93,6 +95,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /users/update:
     summary: Allows user profile update
     description: This path is used for updating user information.
@@ -118,6 +124,10 @@ paths:
           headers:
             Location:
               $ref: "#/components/headers/Location"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /users/logout:
@@ -139,26 +149,6 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /products/product/:productId:
-    summary: Get product data
-    description: This path is used for retreiving a single product data
-    get:
-      tags:
-        - Products
-      summary: Get product details
-      description: Retreive product data based on product ID
-      operationId: get_product
-      parameters:
-        - $ref: "#/components/parameters/productIdPathParameter"
-      responses:
-        "200":
-          description: Product data retrieved successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Product"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
   /products/allProducts:
     summary: Get all products from DB
     description: This path is used for retreiving all products from DB
@@ -177,6 +167,34 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Product"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /products/product/:productId:
+    summary: Get product data
+    description: This path is used for retreiving a single product data
+    get:
+      tags:
+        - Products
+      summary: Get product details
+      description: Retreive product data based on product ID
+      operationId: get_product
+      parameters:
+        - $ref: "#/components/parameters/productIdPathParameter"
+      responses:
+        "200":
+          description: Product data retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /products/productCategory/:category:
@@ -189,7 +207,7 @@ paths:
       tags:
         - Products
       parameters:
-        - $ref: "#/components/parameters/categoryIdPathParameter"
+        - $ref: "#/components/parameters/categoryNameQueryParameter"
       responses:
         "200":
           description: Products under the indicated category retreived successfully
@@ -199,6 +217,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Product"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -227,6 +249,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/CartProductWithQty"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /cart/addProduct:
@@ -250,6 +274,10 @@ paths:
           headers:
             Location:
               $ref: "#/components/headers/Location"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /cart/removeProduct:
@@ -273,6 +301,10 @@ paths:
           headers:
             Location:
               $ref: "#/components/headers/Location"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /cart/reduceProduct:
@@ -296,6 +328,10 @@ paths:
           headers:
             Location:
               $ref: "#/components/headers/Location"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -326,6 +362,8 @@ paths:
                       type: array
                       items:
                         $ref: "#/components/schemas/OrderProductWithQty"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /orders/order/:orderId:
@@ -355,6 +393,10 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/OrderProductWithQty"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /orders/cartToOrder:
@@ -367,18 +409,15 @@ paths:
       tags:
         - Orders
       responses:
-        "200":
-          description: Order created successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    description: order ID
-                  userid:
-                    type: integer
+        "303":
+          description: Order created successful and User redirected to order page
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -407,7 +446,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BaseProduct"
+                $ref: "#/components/schemas/Product"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /admin/products/removeProduct:
@@ -426,6 +471,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ProductId"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ProductId"
 
       responses:
         "200":
@@ -434,6 +482,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OperationMessage"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /admin/products/editProduct:
     summary: Edit product details
     description: This path is used for editing the product details
@@ -448,10 +504,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Product"
+              $ref: "#/components/schemas/ProductInput"
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/Product"
+              $ref: "#/components/schemas/ProductInput"
       responses:
         "200":
           description: Product details updated successfully. New product details object sent back.
@@ -459,6 +515,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Product"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/orders/allOrders:
+    summary: Get all orders in DB
+    description: This path is used by Admin to retreive all the orders data from DB
+    get:
+      summary: Get all orders data from DB
+      description: Retreive All orders data from DB for all users
+      operationId: admin_get_orders
+      tags:
+        - Admin
+        - Orders
+      responses:
+        "200":
+          description: Retreived list of all exising orders in DB
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderWithProductsAndQty"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/orders/order/:orderId:
+    summary: Get any Order by Id
+    description: This path is used for retreiving individaul order data based on Order ID
+    get:
+      summary: Get individaul order details by Order ID
+      description: Retreive Order details via Order ID
+      tags:
+        - Admin
+        - Orders
+      operationId: admin_order_data
+      parameters:
+        - $ref: "#/components/parameters/orderIdPathParameter"
+      responses:
+        "200":
+          description: Order data retreived by order Id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderWithProductsAndQty"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /admin/orders/cancel:
@@ -487,14 +600,178 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OperationMessage"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/orders/addProduct:
+    summary: Add Product or Increase Qty
+    description: This path is used for adding new product line item or increasing the qty for exising product line item in the specific order
+    post:
+      summary: Add product or Increase Product Qty
+      description: Add new porduct line item or increase qty of exisitng product
+      operationId: admin_order_add_product
+      tags:
+        - Admin
+        - Orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PorductIdOrderId"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/PorductIdOrderId"
+      responses:
+        "303":
+          description: Product qty increased or product added to Order successfully, user redirected to Specific Order.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /admin/orders/removeProduct:
+    summary: Remove product from Order
+    description: This path is used to delete a Product from the specific order
+    delete:
+      summary: Delete Line item from Order
+      description: Delete Specific Product ID from specific Order ID
+      operationId: admin_delet_product_from_order
+      tags:
+        - Admin
+        - Orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PorductIdOrderId"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/PorductIdOrderId"
+      responses:
+        "303":
+          description: Product successfully removed from Order, user redirected to Specific order.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/orders/reduceProduct:
+    summary: Reduce Qty or Remove Product
+    description: This path is used for reducing the qty for exising product line item or adding new product line item to the specific order
+    post:
+      summary: Reduce Product Qty or Remove product
+      description: Reduce qty of exisitng product or Remove porduct line item
+      operationId: admin_order_add_product
+      tags:
+        - Admin
+        - Orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PorductIdOrderId"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/PorductIdOrderId"
+      responses:
+        "303":
+          description: Product qty reduced or product removed from Order successfully, user redirected to Specific Order.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/users/profile/:userId:
+    summary: Get any user profile details by user ID
+    description: This path is used for retreiving Any User Data for authorized users.
+    get:
+      tags:
+        - Admin
+        - Users
+      summary: Retreive any user profile
+      description: Retreives any User profile data via User ID from DB if the user is signed in and authorized to perform such operation.
+      operationId: admin_get_user_profile
+      parameters:
+        - $ref: "#/components/parameters/userIdPathParameter"
+      responses:
+        "200":
+          description: User data retreived successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/users/updateProfile:
+    summary: Allows update for any user profile
+    description: This path is used for updating any user profile information (except password).
+    post:
+      tags:
+        - Admin
+        - Users
+      summary: Update any user records data
+      description: Enables update of Any User Profile related data if user is singed in and authorized.
+      operationId: update_user_profile
+      requestBody:
+        description: Updated User data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUser"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUser"
+      responses:
+        "303":
+          description: User record update successful, user redirected to profile page.
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+        "401":
+          $ref: "#/components/responses/AuthenticationError"
+        "403":
+          $ref: "#/components/responses/AuthorizationError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 components:
   parameters:
     productIdPathParameter:
-      name: orderId
-      description: Order ID number
+      name: productId
+      description: Product ID number
       in: path
       required: true
       schema:
@@ -506,13 +783,21 @@ components:
       required: true
       schema:
         type: integer
-    categoryIdPathParameter:
-      name: category
-      description: Category name
+    userIdPathParameter:
+      name: userId
+      description: User Id
       in: path
       required: true
       schema:
+        type: integer
+    categoryNameQueryParameter:
+      name: category
+      description: Category name
+      in: query
+      required: true
+      schema:
         type: string
+
   schemas:
     BaseUser:
       type: object
@@ -525,21 +810,28 @@ components:
           type: string
         password:
           type: string
-        status:
-          type: string
-      required:
-        - firstname
-        - lastname
-        - email
-        - password
-        - status
+    UserRegister:
+      allOf:
+        - $ref: "#/components/schemas/BaseUser"
+        - type: object
+          required:
+            - firstname
+            - lastname
+            - email
+            - password
     User:
       allOf:
         - type: object
           properties:
             id:
               type: integer
+              example: 7
         - $ref: "#/components/schemas/BaseUser"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: user
     UserUpdate:
       allOf:
         - $ref: "#/components/schemas/BaseUser"
@@ -551,6 +843,24 @@ components:
             newPasswordCheck:
               type: string
               nullable: true
+          required:
+            - password
+    AdminUpdateUser:
+      type: object
+      properties:
+        userid:
+          type: integer
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: ["user", "admin"]
+      required:
+        - userid
     UserCredentials:
       type: object
       properties:
@@ -590,19 +900,24 @@ components:
               "accessories",
               "shoes",
             ]
-      required:
-        - name
-        - description
-        - price
-        - category
     Product:
       allOf:
         - type: object
           properties:
             id:
               type: integer
-          required: [id]
         - $ref: "#/components/schemas/BaseProduct"
+        - type: object
+    ProductInput:
+      allOf:
+        - type: object
+          properties:
+            productId:
+              type: integer
+        - $ref: "#/components/schemas/BaseProduct"
+        - type: object
+          required:
+            - id
     CartProductWithQty:
       allOf:
         - $ref: "#/components/schemas/Product"
@@ -631,29 +946,79 @@ components:
                 qty:
                   type: integer
                   nullable: false
+    OrderWithProductsAndQty:
+      type: object
+      properties:
+        id:
+          type: integer
+        userid:
+          type: integer
+        Products:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderProductWithQty"
+    PorductIdOrderId:
+      type: object
+      properties:
+        productId:
+          type: integer
+        orderId:
+          type: integer
+      required:
+        - productId
+        - orderId
+
     OperationMessage:
       type: object
       properties:
-        msg:
+        message:
           description: Server response message
           type: string
+    ErrorObject:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Main Error message
+        details:
+          type: array
+          items:
+            type: string
+            description: Array of Sub error messages
+
   headers:
     Location:
       description: The redirect URI
       schema:
         type: string
         example: /user/profile
+
   responses:
     InternalServerError:
       description: Error at server end.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              msg:
-                type: string
-                description: Error message
+            $ref: "#/components/schemas/ErrorObject"
+    ValidationError:
+      description: User input validation failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorObject"
+    AuthenticationError:
+      description: User is not logged in
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorObject"
+    AuthorizationError:
+      description: User is not authorized to perform the operation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorObject"
+
   securitySchemes:
     BasicAuth:
       type: http

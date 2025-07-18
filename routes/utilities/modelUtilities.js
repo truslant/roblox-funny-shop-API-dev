@@ -1,7 +1,5 @@
 const { Product, User, Order } = require('../../db/database').models
 const createError = require('http-errors')
-const { validCategoriesToString } = require('./generalUtilities')
-const { validProductCategories } = require('../../variables/projectwideVariables')
 
 const isAdmin = async (req, res, next) => {
     if (!req.isAuthenticated()) {

@@ -19,10 +19,23 @@ const { authCheck,
     validationErrorsOutputScript,
     updateOutputObjectGen } = require('../utilities/generalUtilities');
 
-
-router.get('/profile', authCheck, (req, res, next) => {
-    res.status(200).json(req.user);
+router.get('/login', (req, res, next) => {
+    res.redirect('/static/index.html');
 })
+
+router.post('/login',
+    passport.authenticate(
+        'local',
+        {
+            failureRedirect: '/users/logout',
+            failureMessage: true,
+        }
+    ),
+    (req, res, next) => {
+        console.log('Authentication succeded!')
+        res.redirect('/user/profile');
+    }
+)
 
 router.post('/register',
     [
@@ -66,6 +79,11 @@ router.post('/register',
             return next(routeErrorsScript(error, errMsg));
         }
     });
+
+router.get('/profile', authCheck,
+    (req, res, next) => {
+        res.status(200).json(req.user);
+    })
 
 router.put('/update', authCheck,
     [
@@ -118,25 +136,6 @@ router.put('/update', authCheck,
             return next(routeErrorsScript(error, errMsg));
         }
     });
-
-router.get('/login', (req, res, next) => {
-    res.redirect('/static/index.html');
-})
-
-router.post('/login',
-    passport.authenticate(
-        'local',
-        {
-            failureRedirect: '/users/logout',
-            failureMessage: true,
-        }
-    ),
-    (req, res, next) => {
-        console.log('Authentication succeded!')
-        res.redirect('/user/profile');
-    }
-)
-
 
 router.get('/logout', (req, res, next) => {
     req.logout(err => {

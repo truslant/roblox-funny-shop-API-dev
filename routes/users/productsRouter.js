@@ -29,6 +29,31 @@ router.get('/allProducts', authCheck, async (req, res, next) => {
     }
 });
 
+router.get('/product/:productId', authCheck,
+    [
+        anyFieldIdValidator('productId')
+    ],
+
+    async (req, res, next) => {
+        const { productId } = req.params;
+
+        validationErrorsOutputScript(req);
+
+        try {
+            const product = await Product.findByPk(productId)
+            if (!product) {
+                return next(
+                    createError(404, `No product with ID ${productId} found in the DB`)
+                );
+            }
+            res.status(200).json(product)
+        } catch (error) {
+            const errMsg = `Error occured while retreiving the product ${productId} from DB at route "${req.path}"`
+            return next(routeErrorsScript(error, errMsg));
+        }
+    }
+);
+
 router.get('/productCategory', authCheck,
     [
         anyEnumValidateor('category', validProductCategories)
@@ -60,30 +85,6 @@ router.get('/productCategory', authCheck,
     }
 );
 
-router.get('/product/:productId',
-    authCheck,
-    [
-        anyFieldIdValidator('productId')
-    ],
 
-    async (req, res, next) => {
-        const { productId } = req.params;
-
-        validationErrorsOutputScript(req);
-
-        try {
-            const product = await Product.findByPk(productId)
-            if (!product) {
-                return next(
-                    createError(404, `No product with ID ${productId} found in the DB`)
-                );
-            }
-            res.status(200).json(product)
-        } catch (error) {
-            const errMsg = `Error occured while retreiving the product ${productId} from DB at route "${req.path}"`
-            return next(routeErrorsScript(error, errMsg));
-        }
-    }
-);
 
 module.exports = router;

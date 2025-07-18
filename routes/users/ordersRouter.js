@@ -29,7 +29,7 @@ router.get('/', authCheck, async (req, res, next) => {
         });
 
         if (!orders) {
-            return next(createError(204, `There are no orders made yet for user with ID ${req.user.id}`));
+            return next(createError(404, `There are no orders made yet for user with ID ${req.user.id}`));
         }
 
         res.status(200).json(orders);

@@ -62,7 +62,7 @@ router.delete('/removeProduct', isAdmin,
             const deletedProduct = await Product.destroy({ where: { id: productId } });
 
             if (!deletedProduct) {
-                return next(createError(404, `No product with ID ${productId} found in the DB`));
+                return next(createError(400, `No product with ID ${productId} found in the DB`));
             }
 
             res.status(200).json({ message: `Product with ID # ${productId} deleted successfully!` })
